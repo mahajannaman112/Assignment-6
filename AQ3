@@ -1,0 +1,86 @@
+#include <iostream>
+using namespace std;
+
+struct DNode {
+    int data;
+    DNode* prev;
+    DNode* next;
+    DNode(int d): data(d), prev(nullptr), next(nullptr) {}
+};
+
+void insertEnd(DNode** head, int data) {
+    DNode* n = new DNode(data);
+    if (*head == nullptr) {
+        *head = n;
+        return;
+    }
+    DNode* t = *head;
+    while (t->next) t = t->next;
+    t->next = n;
+    n->prev = t;
+}
+
+void printList(DNode* head) {
+    while (head) {
+        cout << head->data << " ";
+        head = head->next;
+    }
+    cout << endl;
+}
+
+DNode* reverseEveryK(DNode* head, int k) {
+    if (!head || k <= 1) return head;
+    DNode* current = head;
+    DNode* newHead = nullptr;
+    DNode* groupPrev = nullptr;
+    while (current) {
+        DNode* groupHead = current;
+        int count = 0;
+        DNode* temp = current;
+        while (temp && count < k) {
+            temp = temp->next;
+            count++;
+        }
+        DNode* prevNode = nullptr;
+        int i = 0;
+        while (current && i < count) {
+            DNode* nxt = current->next;
+            current->next = prevNode;
+            current->prev = nxt;
+            prevNode = current;
+            current = nxt;
+            i++;
+        }
+        if (!newHead) newHead = prevNode;
+        if (groupPrev) {
+            groupPrev->next = prevNode;
+            if (prevNode) prevNode->prev = groupPrev;
+        }
+        groupHead->next = current;
+        if (current) current->prev = groupHead;
+        groupPrev = groupHead;
+    }
+    return newHead;
+}
+
+int main() {
+    DNode* head = nullptr;
+    insertEnd(&head, 1);
+    insertEnd(&head, 2);
+    insertEnd(&head, 3);
+    insertEnd(&head, 4);
+    insertEnd(&head, 5);
+    insertEnd(&head, 6);
+    insertEnd(&head, 7);
+
+    cout << "Original list: ";
+    printList(head);
+
+    int k = 3;
+    head = reverseEveryK(head, k);
+
+    cout << "After reversing every group of " << k << ": ";
+    printList(head);
+
+    return 0;
+}
