@@ -1,0 +1,87 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Node {
+    int data;
+    Node* next;
+    Node* prev;
+    Node* up;
+    Node* down;
+    Node(int d): data(d), next(nullptr), prev(nullptr), up(nullptr), down(nullptr) {}
+};
+
+Node* matrixToDoublyLinkedGrid(const vector<vector<int>>& mat) {
+    if (mat.empty() || mat[0].empty()) return nullptr;
+    int r = mat.size(), c = mat[0].size();
+    vector<vector<Node*>> nodes(r, vector<Node*>(c, nullptr));
+
+    for (int i = 0; i < r; ++i)
+        for (int j = 0; j < c; ++j)
+            nodes[i][j] = new Node(mat[i][j]);
+
+    for (int i = 0; i < r; ++i) {
+        for (int j = 0; j < c; ++j) {
+            if (j + 1 < c) nodes[i][j]->next = nodes[i][j+1];
+            if (j - 1 >= 0) nodes[i][j]->prev = nodes[i][j-1];
+            if (i - 1 >= 0) nodes[i][j]->up = nodes[i-1][j];
+            if (i + 1 < r) nodes[i][j]->down = nodes[i+1][j];
+        }
+    }
+
+    return nodes[0][0];
+}
+
+void printRowWise(Node* head, int cols) {
+    Node* rowStart = head;
+    while (rowStart) {
+        Node* cur = rowStart;
+        for (int i = 0; i < cols && cur; ++i) {
+            cout << cur->data << " ";
+            cur = cur->next;
+        }
+        cout << endl;
+        rowStart = rowStart->down;
+    }
+}
+
+void printColumnWise(Node* head, int rows) {
+    Node* colStart = head;
+    while (colStart) {
+        Node* cur = colStart;
+        for (int i = 0; i < rows && cur; ++i) {
+            cout << cur->data << " ";
+            cur = cur->down;
+        }
+        cout << endl;
+        colStart = colStart->next;
+    }
+}
+
+int main() {
+    vector<vector<int>> mat = {
+        {1, 2, 3, 4},
+        {5, 6, 7, 8},
+        {9,10,11,12}
+    };
+
+    Node* head = matrixToDoublyLinkedGrid(mat);
+
+    cout << "Row-wise traversal:" << endl;
+    printRowWise(head, mat[0].size());
+
+    cout << "\nColumn-wise traversal:" << endl;
+    printColumnWise(head, mat.size());
+
+    // Example quick checks for neighbor pointers (no extensive cleanup)
+    // head->next points to (0,1), head->down points to (1,0)
+    if (head) {
+        cout << "\nNeighbors of head (0,0):" << endl;
+        cout << "next: "  << (head->next ? to_string(head->next->data)  : string("NULL")) << endl;
+        cout << "prev: "  << (head->prev ? to_string(head->prev->data)  : string("NULL")) << endl;
+        cout << "up: "    << (head->up   ? to_string(head->up->data)    : string("NULL")) << endl;
+        cout << "down: "  << (head->down ? to_string(head->down->data)  : string("NULL")) << endl;
+    }
+
+    return 0;
+}
