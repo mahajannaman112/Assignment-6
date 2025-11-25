@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Node {
+    int data;
+    Node* prev;
+    Node* next;
+    Node* random;
+    Node(int d): data(d), prev(nullptr), next(nullptr), random(nullptr) {}
+};
+
+void append(Node** head_ref, int data) {
+    Node* n = new Node(data);
+    if (*head_ref == nullptr) { *head_ref = n; return; }
+    Node* t = *head_ref;
+    while (t->next) t = t->next;
+    t->next = n;
+    n->prev = t;
+}
+
+Node* tail(Node* head) {
+    if (!head) return nullptr;
+    Node* t = head;
+    while (t->next) t = t->next;
+    return t;
+}
+
+void printList(Node* head) {
+    Node* t = head;
+    while (t) {
+        cout << "val:" << t->data << " rnd:";
+        if (t->random) cout << t->random->data;
+        else cout << "NULL";
+        cout << " | ";
+        t = t->next;
+    }
+    cout << endl;
+}
+
+void fixRandomPointers(Node* head) {
+    if (!head) return;
+    vector<Node*> nodes;
+    for (Node* t = head; t; t = t->next) nodes.push_back(t);
+    int n = nodes.size();
+    if (n == 0) return;
+
+    vector<int> score(5,0);
+    for (int i = 0; i < n; ++i) {
+        Node* cur = nodes[i];
+        if (cur->random == cur->next) score[0]++;
+        if (cur->random == cur->prev) score[1]++;
+        if (cur->random == head) score[2]++;
+        if (cur->random == tail(head)) score[3]++;
+        if (cur->random == cur) score[4]++;
+    }
+
+    int best = 0;
+    for (int i = 1; i < 5; ++i) if (score[i] > score[best]) best = i;
+    if (score[best] < n-1) {
+        cout << "Could not infer a clear expected random-pointer pattern.\n";
+        return;
+    }
+
+    for (int i = 0; i < n; ++i) {
+        Node* cur = nodes[i];
+        bool ok = false;
+        if (best == 0 && cur->random == cur->next) ok = true;
+        if (best == 1 && cur->random == cur->prev) ok = true;
+        if (best == 2 && cur->random == head) ok = true;
+        if (best == 3 && cur->random == tail(head)) ok = true;
+        if (best == 4 && cur->random == cur) ok = true;
+        if (!ok) {
+            if (best == 0) cur->random = cur->next;
+            if (best == 1) cur->random = cur->prev;
+            if (best == 2) cur->random = head;
+            if (best == 3) cur->random = tail(head);
+            if (best == 4) cur->random = cur;
+        }
+    }
+    cout << "Random pointers fixed using pattern id " << best << " (0:next,1:prev,2:head,3:tail,4:self)\n";
+}
+
+int main() {
+    Node* head = nullptr;
+    append(&head, 1);
+    append(&head, 2);
+    append(&head, 3);
+    append(&head, 4);
+    append(&head, 5);
+
+    Node* t = head;
+    while (t) { t->random = t->next; t = t->next; } // intended pattern: random -> next
+    tail(head)->random = nullptr;
+
+    head->next->next->random = head->next->next->next->next; // introduce a single wrong random (points to node 5)
+    cout << "Before:\n";
+    printList(head);
+
+    fixRandomPointers(head);
+
+    cout << "After:\n";
+    printList(head);
+
+    return 0;
+}
