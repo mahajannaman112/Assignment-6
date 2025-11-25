@@ -1,0 +1,73 @@
+#include <iostream>
+using namespace std;
+
+struct Node {
+    int data;
+    Node* next;
+    Node(int d): data(d), next(nullptr) {}
+};
+
+void append(Node** head_ref, int data) {
+    if (*head_ref == nullptr) {
+        *head_ref = new Node(data);
+        (*head_ref)->next = *head_ref;
+        return;
+    }
+    Node* temp = *head_ref;
+    while (temp->next != *head_ref) temp = temp->next;
+    Node* n = new Node(data);
+    temp->next = n;
+    n->next = *head_ref;
+}
+
+void printList(Node* head) {
+    if (head == nullptr) return;
+    Node* temp = head;
+    do {
+        cout << temp->data << " ";
+        temp = temp->next;
+    } while (temp != head);
+    cout << endl;
+}
+
+void splitList(Node* head, Node** head1_ref, Node** head2_ref) {
+    *head1_ref = nullptr;
+    *head2_ref = nullptr;
+    if (head == nullptr) return;
+    if (head->next == head) {
+        *head1_ref = head;
+        *head2_ref = nullptr;
+        return;
+    }
+    Node* slow = head;
+    Node* fast = head;
+    while (fast->next != head && fast->next->next != head) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    if (fast->next->next == head) fast = fast->next;
+    *head1_ref = head;
+    *head2_ref = slow->next;
+    fast->next = *head2_ref;
+    slow->next = *head1_ref;
+}
+
+int main() {
+    Node* head = nullptr;
+    append(&head, 1);
+    append(&head, 2);
+    append(&head, 3);
+    append(&head, 4);
+    append(&head, 5);
+
+    Node* head1 = nullptr;
+    Node* head2 = nullptr;
+    splitList(head, &head1, &head2);
+
+    cout << "First circular list: ";
+    printList(head1);
+    cout << "Second circular list: ";
+    printList(head2);
+
+    return 0;
+}
